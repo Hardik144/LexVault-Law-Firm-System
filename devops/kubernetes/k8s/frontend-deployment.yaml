@@ -1,0 +1,52 @@
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lawfirm-frontend
+  namespace: lawfirm
+  labels:
+    app: lawfirm-frontend
+    version: "latest"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: lawfirm-frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: lawfirm-frontend
+        version: "latest"
+    spec:
+      containers:
+        - name: frontend
+          image: hardik144/lawfirm-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 15

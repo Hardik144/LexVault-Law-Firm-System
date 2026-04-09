@@ -1,0 +1,47 @@
+# This service controls which version (blue or green) gets live traffic
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-live
+  namespace: lawfirm
+spec:
+  selector:
+    app: lawfirm-backend
+    version: blue        # Change this to green to switch traffic
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: ClusterIP
+---
+# LoadBalancer for external access on AWS
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-external
+  namespace: lawfirm
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec:
+  selector:
+    app: lawfirm-backend
+    version: blue
+  ports:
+    - port: 80
+      targetPort: 5000
+  type: LoadBalancer
+---
+# Frontend LoadBalancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-external
+  namespace: lawfirm
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec:
+  selector:
+    app: lawfirm-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: LoadBalancer

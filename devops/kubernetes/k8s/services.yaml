@@ -1,0 +1,87 @@
+---
+# Backend Service (ClusterIP — accessed by frontend and Prometheus)
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: lawfirm
+  labels:
+    app: lawfirm-backend
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5000"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app: lawfirm-backend
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP
+
+---
+# Backend NodePort (for direct external access if no Ingress)
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-external
+  namespace: lawfirm
+spec:
+  selector:
+    app: lawfirm-backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+      nodePort: 30500
+  type: NodePort
+
+---
+# Frontend Service (LoadBalancer for cloud / NodePort for local)
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: lawfirm
+  labels:
+    app: lawfirm-frontend
+spec:
+  selector:
+    app: lawfirm-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30080
+  type: NodePort
+
+---
+# Ingress (requires ingress-nginx controller)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lawfirm-ingress
+  namespace: lawfirm
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: lawfirm.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 5000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
