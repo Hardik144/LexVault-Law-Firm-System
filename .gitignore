@@ -5,3 +5,7 @@ uploads/
 .DS_Store
 .devhistory/*
 !.devhistory/log.txt
+upload.sh
+kubeconfig-for-jenkins.txt
+eks-kubeconfig.txt
+jenkins-devops-user_accessKeys.csv
